@@ -748,19 +748,17 @@ body {
   font-family: var(--font-family-base);
   background: var(--color-background);
   color: var(--color-text);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
 }
 
 .container {
   max-width: 500px;
   margin: auto;
-  padding: var(--space-10);
+  padding: var(--space-16);
 }
 
 .header {
   text-align: center;
-  padding: var(--space-10) 0 var(--space-20);
+  padding: var(--space-16) 0 var(--space-20);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -804,9 +802,9 @@ body {
 .loading-spinner {
   width: 32px;
   height: 32px;
-  border: 4px solid var(--color-border);
+  border: 4px solid var(--color-secondary);
   border-top: 4px solid var(--color-primary);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   animation: spin 1s linear infinite;
 }
 
@@ -824,11 +822,12 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-secondary);
+  background: var(--color-surface);
   padding: var(--space-12);
   border-radius: var(--radius-base);
   margin-bottom: var(--space-10);
   border: 1px solid var(--color-card-border);
+  box-shadow: var(--shadow-xs);
 }
 
 .product-info {
@@ -878,21 +877,14 @@ body {
 
 .btn-control:disabled {
   background: var(--color-secondary);
-  color: var(--color-text-secondary);
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.btn-control:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
 }
 
 .quantity {
   min-width: 24px;
   text-align: center;
   font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-md);
   color: var(--color-text);
 }
 
@@ -902,9 +894,9 @@ body {
   left: 0;
   right: 0;
   background: var(--color-surface);
-  padding: var(--space-10);
+  padding: var(--space-16);
   border-top: 2px solid var(--color-primary);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .order-btn {
@@ -917,8 +909,7 @@ body {
   font-weight: var(--font-weight-bold);
   border-radius: var(--radius-base);
   cursor: pointer;
-  transition: background-color var(--duration-normal) var(--ease-standard);
-  font-family: var(--font-family-base);
+  transition: background-color var(--duration-fast) var(--ease-standard);
 }
 
 .order-btn:hover {
@@ -931,25 +922,18 @@ body {
 
 .order-btn:disabled {
   background: var(--color-secondary);
-  color: var(--color-text-secondary);
   cursor: not-allowed;
   opacity: 0.5;
 }
 
-.order-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
-/* Mobile Portrait Responsive Styles */
+/* Mobile responsive styles */
 @media (max-width: 480px) {
   .container {
-    padding: var(--space-8);
-    max-width: 100%;
+    padding: var(--space-12);
   }
   
   .header {
-    padding: var(--space-8) 0 var(--space-16);
+    padding: var(--space-12) 0 var(--space-16);
   }
   
   .header h1 {
@@ -962,8 +946,8 @@ body {
   }
   
   .status-message {
+    padding: var(--space-16);
     margin: var(--space-16);
-    width: calc(100% - var(--space-32));
     left: var(--space-16);
     right: var(--space-16);
     transform: translateY(-50%);
@@ -976,17 +960,10 @@ body {
   .product-item {
     padding: var(--space-10);
     margin-bottom: var(--space-8);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-10);
-  }
-  
-  .product-info {
-    width: 100%;
   }
   
   .product-name {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-base);
   }
   
   .product-price {
@@ -994,27 +971,21 @@ body {
   }
   
   .product-controls {
-    align-self: flex-end;
-    gap: var(--space-12);
+    gap: var(--space-6);
   }
   
   .btn-control {
-    width: 36px;
-    height: 36px;
-    font-size: var(--font-size-lg);
-  }
-  
-  .quantity {
-    min-width: 32px;
+    width: 28px;
+    height: 28px;
     font-size: var(--font-size-lg);
   }
   
   .footer {
-    padding: var(--space-12) var(--space-8);
+    padding: var(--space-12);
   }
   
   .order-btn {
-    padding: var(--space-16) var(--space-12);
-    font-size: var(--font-size-md);
+    padding: var(--space-10);
+    font-size: var(--font-size-base);
   }
 }
