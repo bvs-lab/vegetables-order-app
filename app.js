@@ -1,214 +1,94 @@
-// Telegram Web App initialization
-let tg = window.Telegram?.WebApp;
-if (tg) {
-    tg.ready();
-    tg.expand();
-}
+// Инициализация Telegram Web App
+const tg = window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
 
-// Статические данные товаров
-const products = [
-    {"id": 1, "name": "Картофель", "price": 60, "unit": "1 кг"},
-    {"id": 2, "name": "Морковь", "price": 60, "unit": "1 кг"},
-    {"id": 3, "name": "Лук репчатый", "price": 60, "unit": "1 кг"},
-    {"id": 4, "name": "Кабачки", "price": 100, "unit": "1 кг"},
-    {"id": 5, "name": "Баклажаны", "price": 80, "unit": "1 кг"},
-    {"id": 6, "name": "Огурцы (пупырчатые)", "price": 170, "unit": "1 кг"},
-    {"id": 7, "name": "Помидоры (без жилок)", "price": 150, "unit": "1 кг"},
-    {"id": 8, "name": "Шампиньоны", "price": 330, "unit": "1 кг"},
-    {"id": 9, "name": "Болгарский перец", "price": 140, "unit": "1 кг"},
-    {"id": 10, "name": "Укроп", "price": 420, "unit": "0,5 кг"},
-    {"id": 11, "name": "Петрушка", "price": 420, "unit": "0,5 кг"},
-    {"id": 12, "name": "Лук зеленый", "price": 470, "unit": "0,5 кг"},
-    {"id": 13, "name": "Кинза", "price": 420, "unit": "0,5 кг"},
-    {"id": 14, "name": "Салат айсберг", "price": 520, "unit": "1 кг"},
-    {"id": 15, "name": "Виноград розовый", "price": 150, "unit": "1 кг"},
-    {"id": 16, "name": "Виноград черный", "price": 150, "unit": "1 кг"},
-    {"id": 17, "name": "Виноград элитный", "price": 350, "unit": "1 кг"},
-    {"id": 18, "name": "Инжир зеленый", "price": 350, "unit": "1 кг"},
-    {"id": 19, "name": "Персик", "price": 170, "unit": "1 кг"},
-    {"id": 20, "name": "Манго", "price": 330, "unit": "1 кг"},
-    {"id": 21, "name": "Мандарины", "price": 200, "unit": "1 кг"},
-    {"id": 22, "name": "Гранат", "price": 170, "unit": "1 кг"}
-];
-
-// Корзина
+const API_TOKEN = '1e268f0d97ad4edf6da4e032cd041103';
+const TABLE_ID = '1';
+let products = [];
 let cart = {};
-let totalAmount = 0;
 
-// Элементы DOM
-let totalElement;
-let orderBtn;
-let conditionsMessage;
-let statusMessage;
-let statusText;
+const totalEl = () => document.getElementById('total');
+const orderBtn = () => document.getElementById('order-btn');
+const productList = () => document.getElementById('product-list');
+const statusMsg = () => document.getElementById('status-message');
+const statusText = () => document.getElementById('status-text');
 
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', function() {
-    totalElement = document.getElementById('total');
-    orderBtn = document.getElementById('order-btn');
-    conditionsMessage = document.getElementById('conditions-message');
-    statusMessage = document.getElementById('status-message');
-    statusText = document.getElementById('status-text');
-
-    // Показываем сообщение с условиями
-    if (conditionsMessage) {
-        conditionsMessage.style.display = 'block';
-    }
-
+// Загрузка товаров из Salebot таблицы
+async function fetchProducts() {
+  showStatus('Загрузка товаров...');
+  try {
+    const res = await fetch(`https://chatter.salebot.pro/api/${API_TOKEN}/table/${TABLE_ID}/rows`);
+    const data = await res.json();
+    products = data.rows.map(r => ({
+      id: r.ID,
+      name: r.Наименование,
+      price: parseInt(r.Цена, 10),
+      unit: r.Единицы
+    }));
+    hideStatus();
     renderProducts();
     updateTotal();
+  } catch (e) {
+    showStatus('Ошибка загрузки товаров');
+  }
+}
 
-    // Обработчик кнопки заказа
-    orderBtn.addEventListener('click', function() {
-        if (totalAmount >= 1200) {
-            submitOrder();
-        }
-    });
-});
-
-// Отрисовка товаров
 function renderProducts() {
-    const productList = document.getElementById('product-list');
-    productList.innerHTML = '';
-    
-    products.forEach(product => {
-        const productDiv = document.createElement('div');
-        productDiv.className = 'product-item';
-        productDiv.innerHTML = `
-            <div class="product-info">
-                <div class="product-name">${product.name}</div>
-                <div class="product-price">${product.price} ₽ / ${product.unit}</div>
-            </div>
-            <div class="product-controls">
-                <button class="btn-control" onclick="changeQuantity(${product.id}, -1)" ${(cart[product.id] || 0) === 0 ? 'disabled' : ''}>−</button>
-                <span class="quantity" id="qty-${product.id}">${cart[product.id] || 0}</span>
-                <button class="btn-control" onclick="changeQuantity(${product.id}, 1)">+</button>
-            </div>
-        `;
-        productList.appendChild(productDiv);
-    });
+  productList().innerHTML = products.map(p => `
+    <div class="product-item">
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">${p.price}₽/${p.unit}</div>
+      </div>
+      <div class="product-controls">
+        <button class="btn-control" onclick="changeQty(${p.id}, -1)" ${!cart[p.id]?'disabled':''}>−</button>
+        <span class="quantity" id="qty-${p.id}">${cart[p.id]||0}</span>
+        <button class="btn-control" onclick="changeQty(${p.id}, 1)">+</button>
+      </div>
+    </div>
+  `).join('');
 }
 
-// Изменение количества товара
-function changeQuantity(productId, delta) {
-    const currentQty = cart[productId] || 0;
-    const newQty = Math.max(0, currentQty + delta);
-    
-    if (newQty === 0) {
-        delete cart[productId];
-    } else {
-        cart[productId] = newQty;
-    }
-    
-    // Обновляем отображение количества
-    document.getElementById(`qty-${productId}`).textContent = newQty;
-    
-    // Обновляем кнопку минус
-    const minusBtn = document.querySelector(`[onclick="changeQuantity(${productId}, -1)"]`);
-    minusBtn.disabled = newQty === 0;
-    
-    updateTotal();
+function changeQty(id, delta) {
+  cart[id] = Math.max(0, (cart[id]||0) + delta);
+  if (!cart[id]) delete cart[id];
+  document.getElementById(`qty-${id}`).textContent = cart[id]||0;
+  updateTotal();
 }
 
-// Обновление общей суммы
 function updateTotal() {
-    totalAmount = 0;
-    
-    for (const [productId, quantity] of Object.entries(cart)) {
-        const product = products.find(p => p.id === parseInt(productId));
-        if (product) {
-            totalAmount += product.price * quantity;
-        }
-    }
-    
-    totalElement.textContent = totalAmount;
-    
-    // Обновляем кнопку заказа
-    if (totalAmount >= 1200) {
-        orderBtn.disabled = false;
-        orderBtn.textContent = `Оформить заказ (${totalAmount} ₽)`;
-        orderBtn.style.background = '#2563eb';
-    } else {
-        orderBtn.disabled = true;
-        orderBtn.textContent = `Минимум 1200 ₽ (не хватает ${1200 - totalAmount} ₽)`;
-        orderBtn.style.background = '#9ca3af';
-    }
+  const total = Object.entries(cart).reduce((sum, [id, q]) => {
+    const p = products.find(x => x.id == id);
+    return sum + (p.price*q);
+  }, 0);
+  totalEl().textContent = total;
+  if (total >= 1200) {
+    orderBtn().disabled = false;
+    orderBtn().textContent = `Оформить заказ (${total}₽)`;
+  } else {
+    orderBtn().disabled = true;
+    orderBtn().textContent = 'Мин.1200₽';
+  }
 }
 
-// Отправка заказа
+// Отправка заказа в Salebot
 function submitOrder() {
-    if (totalAmount < 1200) return;
-    
-    // Показываем индикатор загрузки
-    showStatusMessage('Отправляем заказ...');
-    
-    // Формируем список товаров для отправки
-    const items = Object.entries(cart)
-        .map(([productId, quantity]) => {
-            const product = products.find(p => p.id === parseInt(productId));
-            return `${product.name} – ${quantity} ${product.unit} (${product.price * quantity} ₽)`;
-        })
-        .join('\n');
-    
-    // Получаем данные пользователя из Telegram
-    const tgUser = tg?.initDataUnsafe?.user || {};
-    
-    // Формируем объект заказа
-    const orderData = {
-        cart: cart,
-        items: items,
-        total: totalAmount,
-        orderTime: Date.now(),
-        telegram_user_id: tgUser.id,
-        telegram_username: tgUser.username,
-        telegram_first_name: tgUser.first_name
-    };
-    
-    try {
-        // Отправляем данные в Salebot через Telegram Web App
-        if (tg && tg.sendData) {
-            tg.sendData(JSON.stringify(orderData));
-            
-            // Показываем успешное сообщение
-            showStatusMessage('✅ Заказ отправлен!\nОжидайте подтверждения в чате');
-            
-            // Очищаем корзину через 2 секунды
-            setTimeout(() => {
-                cart = {};
-                totalAmount = 0;
-                renderProducts();
-                updateTotal();
-                hideStatusMessage();
-            }, 2000);
-            
-        } else {
-            throw new Error('Telegram Web App недоступен');
-        }
-        
-    } catch (error) {
-        console.error('Ошибка отправки заказа:', error);
-        showStatusMessage('❌ Ошибка отправки заказа\nПопробуйте еще раз');
-        
-        setTimeout(() => {
-            hideStatusMessage();
-        }, 3000);
-    }
+  const total = +totalEl().textContent;
+  if (total < 1200) return;
+  const items = Object.entries(cart).map(([id,q]) => {
+    const p = products.find(x => x.id == id);
+    return `${p.name} – ${q} ${p.unit} (${p.price*q}₽)`;
+  }).join('\n');
+  const user = tg.initDataUnsafe.user || {};
+  const orderData = { cart, items, total, orderTime: Date.now(), telegram_user_id: user.id, telegram_username: user.username };
+  tg.sendData(JSON.stringify(orderData));
+  showStatus('✅ Заказ отправлен!\nОжидайте подтверждения');
+  setTimeout(() => { cart={}; renderProducts(); updateTotal(); hideStatus(); }, 2000);
 }
 
-// Показать сообщение о статусе
-function showStatusMessage(text) {
-    if (statusMessage && statusText) {
-        statusText.textContent = text;
-        statusMessage.classList.remove('hidden');
-    }
-}
+function showStatus(txt) { statusText().textContent = txt; statusMsg().classList.remove('hidden'); }
+function hideStatus() { statusMsg().classList.add('hidden'); }
 
-// Скрыть сообщение о статусе  
-function hideStatusMessage() {
-    if (statusMessage) {
-        statusMessage.classList.add('hidden');
-    }
-}
-
-// Глобальная функция для кнопок
-window.changeQuantity = changeQuantity;
+window.changeQty = changeQty;
+orderBtn().addEventListener('click', submitOrder);
+fetchProducts();
