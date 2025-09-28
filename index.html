@@ -258,7 +258,30 @@ document.getElementById('status-text').textContent='Отправляем зак�
 
 // Отправляем данные через Telegram WebApp API
 console.log('Отправляемые данные:', JSON.stringify(orderData, null, 2));
-tg.sendData(JSON.stringify(orderData));
+
+// Формируем данные для отправки в бота
+const orderText = `🛒 НОВЫЙ ЗАКАЗ
+
+👤 Клиент: ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'без username'})
+📅 Время: ${orderData.orderTime}
+💰 Сумма: ${total}₽
+
+📋 Товары:
+${items}
+
+🆔 ID пользователя: ${user.id || 'неизвестно'}`;
+
+// Отправляем как текст в бота
+tg.sendData(orderText);
+
+// Дополнительно отправляем JSON данные через MainButton callback
+if (tg.MainButton) {
+  tg.MainButton.setText('Заказ отправлен!');
+  tg.MainButton.show();
+  
+  // Сохраняем данные в localStorage для доступа из бота
+  localStorage.setItem('lastOrder', JSON.stringify(orderData));
+}
 
 setTimeout(()=>{
 document.getElementById('status-text').textContent='✅ Заказ отправлен!\nОжидайте подтверждения';
