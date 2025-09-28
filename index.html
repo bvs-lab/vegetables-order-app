@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -70,6 +70,9 @@ body{font-family:-apple-system,sans-serif;background:#fff;padding-bottom:80px}
 <script>
 const tg=window.Telegram.WebApp;
 if(tg){tg.ready();tg.expand();}
+
+// �������� �� ��� ����� ����
+const BOT_TOKEN = '8448737613:AAGnAC5S_PEbg3Ony6qOXJfHY7C9hFQ0-vU';
 
 // URL для загрузки данных из Google Sheets (CSV формат)
 const SHEETS_URL = 'https://docs.google.com/spreadsheets/d/14WPvmY8cIFufe5VKRcvDYP2vCI9bhq9vILUsMbzRZXk/export?format=csv';
@@ -231,6 +234,35 @@ btn.disabled=true;
 btn.textContent=`Мин. заказ 1200₽ (не хватает ${1200-total}₽)`;
 }
 }
+// Функция для отправки сообщения через Bot API
+async function sendMessageToBot(chatId, text) {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'HTML'
+      })
+    });
+    
+    const result = await response.json();
+    if (result.ok) {
+      console.log('Сообщение отправлено в бот:', result);
+      return true;
+    } else {
+      console.error('Ошибка отправки в бот:', result);
+      return false;
+    }
+  } catch (error) {
+    console.error('Ошибка сети при отправке в бот:', error);
+    return false;
+  }
+}
+
 
 function submitOrder(){
 const total=+document.getElementById('total').textContent;
@@ -258,29 +290,34 @@ document.getElementById('status-text').textContent='Отправляем зак�
 
 // Отправляем данные через Telegram WebApp API
 console.log('Отправляемые данные:', JSON.stringify(orderData, null, 2));
+tg.sendData(JSON.stringify(orderData));
 
-// Формируем данные для отправки в бота
-const orderText = `🛒 НОВЫЙ ЗАКАЗ
+// Формируем текст заказа для отправки в бот
+const orderText = `🆕 <b>НОВЫЙ ЗАКАЗ</b>
 
-👤 Клиент: ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'без username'})
-📅 Время: ${orderData.orderTime}
-💰 Сумма: ${total}₽
+👤 <b>Клиент:</b> ${user.first_name || ''} ${user.last_name || ''} (@${user.username || 'без username'})
+📅 <b>Время:</b> ${orderData.orderTime}
+💰 <b>Сумма:</b> ${total}₽
 
-📋 Товары:
+📋 <b>Товары:</b>
 ${items}
 
-🆔 ID пользователя: ${user.id || 'неизвестно'}`;
+🆔 <b>ID пользователя:</b> ${user.id || 'неизвестно'}
 
-// Отправляем как текст в бота
-tg.sendData(orderText);
+📊 <b>JSON данные:</b>
+<code>${JSON.stringify(orderData, null, 2)}</code>`;
 
-// Дополнительно отправляем JSON данные через MainButton callback
-if (tg.MainButton) {
-  tg.MainButton.setText('Заказ отправлен!');
-  tg.MainButton.show();
-  
-  // Сохраняем данные в localStorage для доступа из бота
-  localStorage.setItem('lastOrder', JSON.stringify(orderData));
+// Отправляем сообщение через Bot API
+if (BOT_TOKEN !== 'YOUR_BOT_TOKEN_HERE' && user.id) {
+  sendMessageToBot(user.id, orderText).then(success => {
+    if (success) {
+      console.log('Заказ отправлен в бот через Bot API');
+    } else {
+      console.log('Не удалось отправить в бот через Bot API');
+    }
+  });
+} else {
+  console.log('BOT_TOKEN не настроен или нет user.id');
 }
 
 setTimeout(()=>{
