@@ -254,7 +254,7 @@ document.getElementById('status').classList.remove('hidden');
 document.getElementById('status-text').textContent='Отправляем заказ...';
 
 // Отправляем данные через Telegram WebApp API
-console.log('Отправляемые данные:', JSON.stringify(d, null, 2));
+console.log('Отправляемые данные:', JSON.stringify(orderData, null, 2));
 tg.sendData(JSON.stringify(orderData));
 
 setTimeout(()=>{
